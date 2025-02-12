@@ -17,12 +17,21 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: true,
+    chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom'],
-          firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore'],
-          mui: ['@mui/material', '@mui/icons-material'],
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-firebase': ['firebase/app', 'firebase/auth', 'firebase/firestore'],
+          'vendor-mui-core': ['@mui/material', '@mui/system'],
+          'vendor-mui-icons': ['@mui/icons-material'],
+          'vendor-mui-pickers': ['@mui/x-date-pickers'],
+          'vendor-date': ['date-fns'],
+          'vendor-charts': ['recharts'],
+          'vendor-utils': [
+            'react-firebase-hooks',
+            'react-google-button'
+          ]
         },
       },
     },
