@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link, Navigate, useLocation } from 'react-router-dom';
 import {
   AppBar,
   Toolbar,
@@ -23,6 +23,7 @@ import Home from './pages/Home';
 import MonthlyReport from './pages/MonthlyReport';
 import Analytics from './pages/Analytics';
 import Categories from './pages/Categories';
+import About from './pages/About';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { es } from 'date-fns/locale';
@@ -37,6 +38,25 @@ const theme = createTheme({
     },
   },
 });
+
+interface ProtectedRouteProps {
+  children: React.ReactNode;
+}
+
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+  const [user, loading] = useAuthState(auth);
+  const location = useLocation();
+
+  if (loading) {
+    return <Box>Cargando...</Box>;
+  }
+
+  if (!user && location.pathname !== '/about') {
+    return <Navigate to="/" replace />;
+  }
+
+  return <>{children}</>;
+};
 
 const App: React.FC = () => {
   const [user] = useAuthState(auth);
@@ -75,16 +95,18 @@ const App: React.FC = () => {
           <Box sx={{ flexGrow: 1 }}>
             <AppBar position="static">
               <Toolbar>
-                <IconButton
-                  size="large"
-                  edge="start"
-                  color="inherit"
-                  aria-label="menu"
-                  sx={{ mr: 2 }}
-                  onClick={handleMenuOpen}
-                >
-                  <MenuIcon />
-                </IconButton>
+                {user && (
+                  <IconButton
+                    size="large"
+                    edge="start"
+                    color="inherit"
+                    aria-label="menu"
+                    sx={{ mr: 2 }}
+                    onClick={handleMenuOpen}
+                  >
+                    <MenuIcon />
+                  </IconButton>
+                )}
                 <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
                   Cuentas
                 </Typography>
@@ -140,6 +162,13 @@ const App: React.FC = () => {
               >
                 Categorías
               </MenuItem>
+              <MenuItem
+                component={Link}
+                to="/about"
+                onClick={handleMenuClose}
+              >
+                Acerca de
+              </MenuItem>
             </Menu>
 
             <Menu
@@ -170,9 +199,31 @@ const App: React.FC = () => {
           <Container sx={{ mt: 4 }}>
             <Routes>
               <Route path="/" element={<Home />} />
-              <Route path="/monthly-report" element={<MonthlyReport />} />
-              <Route path="/analytics" element={<Analytics />} />
-              <Route path="/categories" element={<Categories />} />
+              <Route path="/about" element={<About />} />
+              <Route
+                path="/monthly-report"
+                element={
+                  <ProtectedRoute>
+                    <MonthlyReport />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/analytics"
+                element={
+                  <ProtectedRoute>
+                    <Analytics />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/categories"
+                element={
+                  <ProtectedRoute>
+                    <Categories />
+                  </ProtectedRoute>
+                }
+              />
             </Routes>
           </Container>
         </BrowserRouter>
