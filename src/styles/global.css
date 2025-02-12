@@ -338,4 +338,68 @@ body {
 .gap-1 { gap: 0.25rem; }
 .gap-2 { gap: 0.5rem; }
 .gap-3 { gap: 1rem; }
-.gap-4 { gap: 1.5rem; } 
+.gap-4 { gap: 1.5rem; }
+
+/* Estilos de impresión */
+@media print {
+  @page {
+    margin: 2cm;
+  }
+
+  body {
+    background: none !important;
+    color: var(--color-ink) !important;
+  }
+
+  .paper-grid::before {
+    display: none !important;
+  }
+
+  .main-container {
+    background: none !important;
+  }
+
+  .paper {
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  .summary-card {
+    page-break-inside: avoid;
+    border: 1px solid var(--color-ink-light) !important;
+  }
+
+  table {
+    page-break-inside: auto;
+  }
+
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+
+  thead {
+    display: table-header-group;
+  }
+
+  tfoot {
+    display: table-footer-group;
+  }
+
+  button {
+    display: none !important;
+  }
+
+  .MuiChip-root {
+    border: 1px solid var(--color-ink-light) !important;
+    background: none !important;
+  }
+
+  .success {
+    color: var(--color-success) !important;
+  }
+
+  .error {
+    color: var(--color-error) !important;
+  }
+} 

@@ -11,9 +11,10 @@ import {
   TableHead,
   TableRow,
   Chip,
-  IconButton
+  IconButton,
+  Button
 } from '@mui/material';
-import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { Edit as EditIcon, Delete as DeleteIcon, FileDownload as FileDownloadIcon } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -123,23 +124,66 @@ const MonthlyReport: React.FC = () => {
     }).format(Math.abs(amount));
   };
 
+  const handleExportCSV = () => {
+    if (transactions.length === 0) return;
+
+    const headers = ['Fecha', 'Descripción', 'Categoría', 'Monto'];
+    const csvData = transactions.map(transaction => [
+      format(transaction.date, 'dd/MM/yyyy'),
+      transaction.description,
+      getCategoryName(transaction.category),
+      transaction.amount.toString()
+    ]);
+
+    const csvContent = [
+      headers.join(','),
+      ...csvData.map(row => row.join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `reporte_mensual_${format(selectedDate, 'MM-yyyy')}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <Container maxWidth="md">
       <Box sx={{ py: 4 }}>
-        <Typography variant="h4" gutterBottom>
-          Reporte Mensual
-        </Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+          <Typography variant="h4">
+            Reporte Mensual
+          </Typography>
+          <Button
+            variant="contained"
+            startIcon={<FileDownloadIcon />}
+            onClick={handleExportCSV}
+            sx={{ 
+              ml: 2,
+              '@media print': {
+                display: 'none'
+              }
+            }}
+          >
+            Exportar CSV
+          </Button>
+        </Box>
 
-        <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
-          <DatePicker
-            label="Seleccionar Mes"
-            value={selectedDate}
-            onChange={(newDate) => newDate && setSelectedDate(newDate)}
-            views={['year', 'month']}
-            defaultValue={new Date()}
-            sx={{ mb: 4 }}
-          />
-        </LocalizationProvider>
+        <Box sx={{ '@media print': { display: 'none' } }}>
+          <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
+            <DatePicker
+              label="Seleccionar Mes"
+              value={selectedDate}
+              onChange={(newDate) => newDate && setSelectedDate(newDate)}
+              views={['year', 'month']}
+              defaultValue={new Date()}
+              sx={{ mb: 4 }}
+            />
+          </LocalizationProvider>
+        </Box>
 
         <Box sx={{ mb: 4 }}>
           <Paper 
@@ -183,7 +227,12 @@ const MonthlyReport: React.FC = () => {
                 <TableCell>Descripción</TableCell>
                 <TableCell>Categoría</TableCell>
                 <TableCell align="right">Monto</TableCell>
-                <TableCell align="center">Acciones</TableCell>
+                <TableCell 
+                  align="center"
+                  sx={{ '@media print': { display: 'none' } }}
+                >
+                  Acciones
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -206,7 +255,10 @@ const MonthlyReport: React.FC = () => {
                   >
                     {formatAmount(transaction.amount)}
                   </TableCell>
-                  <TableCell align="center">
+                  <TableCell 
+                    align="center"
+                    sx={{ '@media print': { display: 'none' } }}
+                  >
                     <IconButton
                       size="small"
                       onClick={() => handleEdit(transaction)}
