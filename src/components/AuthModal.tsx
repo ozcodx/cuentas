@@ -6,9 +6,10 @@ import { Link } from 'react-router-dom';
 
 interface AuthModalProps {
   open: boolean;
+  onClose: () => void;
 }
 
-const AuthModal: React.FC<AuthModalProps> = ({ open }) => {
+const AuthModal: React.FC<AuthModalProps> = ({ open, onClose }) => {
   const handleGoogleSignIn = async () => {
     try {
       await signInWithGoogle();
@@ -23,6 +24,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ open }) => {
       disableEscapeKeyDown
       maxWidth="sm"
       fullWidth
+      onClose={onClose}
     >
       <DialogTitle sx={{ textAlign: 'center' }}>Bienvenido a Cuentas</DialogTitle>
       <DialogContent>
