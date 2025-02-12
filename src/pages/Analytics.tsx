@@ -27,7 +27,7 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '../services/auth';
 import { getTransactionsByDateRange } from '../services/transactions';
 import { getCategories } from '../services/categories';
-import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
+import { format, subMonths, startOfMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
 import type { Category } from '../services/categories';
 
@@ -187,7 +187,7 @@ const Analytics: React.FC = () => {
                     outerRadius={80}
                     label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
                   >
-                    {categoryData.map((entry, index) => (
+                    {categoryData.map((_, index) => (
                       <Cell
                         key={`cell-${index}`}
                         fill={COLORS[index % COLORS.length]}
