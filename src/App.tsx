@@ -6,17 +6,15 @@ import {
   Typography,
   Container,
   Box,
-  Button,
   IconButton,
   Menu,
   MenuItem,
-  useTheme,
+  Avatar,
   ThemeProvider,
   createTheme
 } from '@mui/material';
 import {
   Menu as MenuIcon,
-  AccountCircle,
   Logout as LogoutIcon
 } from '@mui/icons-material';
 import { useAuthState } from 'react-firebase-hooks/auth';
@@ -42,20 +40,29 @@ const theme = createTheme({
 
 const App: React.FC = () => {
   const [user] = useAuthState(auth);
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const [menuAnchorEl, setMenuAnchorEl] = React.useState<null | HTMLElement>(null);
+  const [profileAnchorEl, setProfileAnchorEl] = React.useState<null | HTMLElement>(null);
 
-  const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setMenuAnchorEl(event.currentTarget);
   };
 
-  const handleClose = () => {
-    setAnchorEl(null);
+  const handleProfileOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setProfileAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setMenuAnchorEl(null);
+  };
+
+  const handleProfileClose = () => {
+    setProfileAnchorEl(null);
   };
 
   const handleLogout = async () => {
     try {
       await signOut();
-      handleClose();
+      handleProfileClose();
     } catch (error) {
       console.error('Error al cerrar sesión:', error);
     }
@@ -74,7 +81,7 @@ const App: React.FC = () => {
                   color="inherit"
                   aria-label="menu"
                   sx={{ mr: 2 }}
-                  onClick={handleMenu}
+                  onClick={handleMenuOpen}
                 >
                   <MenuIcon />
                 </IconButton>
@@ -84,51 +91,78 @@ const App: React.FC = () => {
                 {user && (
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
                     <IconButton
+                      onClick={handleProfileOpen}
                       size="large"
                       color="inherit"
-                      onClick={handleLogout}
+                      sx={{ ml: 2 }}
                     >
-                      <LogoutIcon />
-                    </IconButton>
-                    <IconButton size="large" color="inherit">
-                      <AccountCircle />
+                      <Avatar
+                        alt={user.displayName || ''}
+                        src={user.photoURL || ''}
+                        sx={{ width: 32, height: 32 }}
+                      />
                     </IconButton>
                   </Box>
                 )}
               </Toolbar>
             </AppBar>
+
             <Menu
-              anchorEl={anchorEl}
-              open={Boolean(anchorEl)}
-              onClose={handleClose}
+              anchorEl={menuAnchorEl}
+              open={Boolean(menuAnchorEl)}
+              onClose={handleMenuClose}
             >
               <MenuItem
                 component={Link}
                 to="/"
-                onClick={handleClose}
+                onClick={handleMenuClose}
               >
                 Inicio
               </MenuItem>
               <MenuItem
                 component={Link}
                 to="/monthly-report"
-                onClick={handleClose}
+                onClick={handleMenuClose}
               >
                 Reporte Mensual
               </MenuItem>
               <MenuItem
                 component={Link}
                 to="/analytics"
-                onClick={handleClose}
+                onClick={handleMenuClose}
               >
                 Análisis
               </MenuItem>
               <MenuItem
                 component={Link}
                 to="/categories"
-                onClick={handleClose}
+                onClick={handleMenuClose}
               >
                 Categorías
+              </MenuItem>
+            </Menu>
+
+            <Menu
+              anchorEl={profileAnchorEl}
+              open={Boolean(profileAnchorEl)}
+              onClose={handleProfileClose}
+              anchorOrigin={{
+                vertical: 'bottom',
+                horizontal: 'right',
+              }}
+              transformOrigin={{
+                vertical: 'top',
+                horizontal: 'right',
+              }}
+            >
+              {user?.displayName && (
+                <MenuItem disabled>
+                  Sesión iniciada como {user.displayName}
+                </MenuItem>
+              )}
+              <MenuItem onClick={handleLogout}>
+                <LogoutIcon sx={{ mr: 1 }} />
+                Cerrar Sesión
               </MenuItem>
             </Menu>
           </Box>

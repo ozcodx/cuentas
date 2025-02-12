@@ -5,7 +5,10 @@ import {
   where,
   getDocs,
   Timestamp,
-  orderBy
+  orderBy,
+  deleteDoc,
+  doc,
+  updateDoc
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { User } from 'firebase/auth';
@@ -31,6 +34,30 @@ export const addTransaction = async (transaction: Omit<Transaction, 'id'>) => {
     return docRef.id;
   } catch (error) {
     console.error('Error al añadir transacción:', error);
+    throw error;
+  }
+};
+
+export const updateTransaction = async (transactionId: string, updates: Partial<Transaction>) => {
+  try {
+    const transactionRef = doc(db, 'transactions', transactionId);
+    const updatedData = {
+      ...updates,
+      date: updates.date ? Timestamp.fromDate(updates.date) : undefined,
+      timestamp: new Date()
+    };
+    await updateDoc(transactionRef, updatedData);
+  } catch (error) {
+    console.error('Error al actualizar transacción:', error);
+    throw error;
+  }
+};
+
+export const deleteTransaction = async (transactionId: string) => {
+  try {
+    await deleteDoc(doc(db, 'transactions', transactionId));
+  } catch (error) {
+    console.error('Error al eliminar transacción:', error);
     throw error;
   }
 };

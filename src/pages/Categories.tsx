@@ -19,7 +19,11 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Chip
+  Chip,
+  Grid,
+  RadioGroup,
+  Radio,
+  FormControlLabel
 } from '@mui/material';
 import { Delete as DeleteIcon, Edit as EditIcon } from '@mui/icons-material';
 import { useAuthState } from 'react-firebase-hooks/auth';
@@ -34,9 +38,25 @@ import {
 
 interface CategoryFormData {
   name: string;
-  type: 'expense' | 'income' | 'both';
-  color?: string;
+  type: 'expense' | 'income';
+  color: string;
 }
+
+const EXPENSE_COLORS = [
+  { name: 'Rojo', value: '#f44336' },
+  { name: 'Rosa', value: '#e91e63' },
+  { name: 'Púrpura', value: '#9c27b0' },
+  { name: 'Índigo', value: '#3f51b5' },
+  { name: 'Azul', value: '#2196f3' },
+];
+
+const INCOME_COLORS = [
+  { name: 'Verde', value: '#4caf50' },
+  { name: 'Verde Lima', value: '#8bc34a' },
+  { name: 'Verde Azulado', value: '#009688' },
+  { name: 'Ámbar', value: '#ffc107' },
+  { name: 'Naranja', value: '#ff9800' },
+];
 
 const Categories: React.FC = () => {
   const [user] = useAuthState(auth);
@@ -45,8 +65,10 @@ const Categories: React.FC = () => {
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [formData, setFormData] = useState<CategoryFormData>({
     name: '',
-    type: 'expense'
+    type: 'expense',
+    color: EXPENSE_COLORS[0].value
   });
+  const [customColor, setCustomColor] = useState(false);
 
   useEffect(() => {
     loadCategories();
@@ -69,14 +91,17 @@ const Categories: React.FC = () => {
       setFormData({
         name: category.name,
         type: category.type,
-        color: category.color
+        color: category.color || (category.type === 'expense' ? EXPENSE_COLORS[0].value : INCOME_COLORS[0].value)
       });
+      setCustomColor(!EXPENSE_COLORS.concat(INCOME_COLORS).some(c => c.value === category.color));
     } else {
       setEditingCategory(null);
       setFormData({
         name: '',
-        type: 'expense'
+        type: 'expense',
+        color: EXPENSE_COLORS[0].value
       });
+      setCustomColor(false);
     }
     setOpenDialog(true);
   };
@@ -86,8 +111,10 @@ const Categories: React.FC = () => {
     setEditingCategory(null);
     setFormData({
       name: '',
-      type: 'expense'
+      type: 'expense',
+      color: EXPENSE_COLORS[0].value
     });
+    setCustomColor(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -124,27 +151,17 @@ const Categories: React.FC = () => {
     }
   };
 
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case 'expense':
-        return 'error';
-      case 'income':
-        return 'success';
-      default:
-        return 'primary';
-    }
+  const handleTypeChange = (type: 'expense' | 'income') => {
+    setFormData({
+      ...formData,
+      type,
+      color: type === 'expense' ? EXPENSE_COLORS[0].value : INCOME_COLORS[0].value
+    });
+    setCustomColor(false);
   };
 
-  const getTypeLabel = (type: string) => {
-    switch (type) {
-      case 'expense':
-        return 'Gasto';
-      case 'income':
-        return 'Ingreso';
-      default:
-        return 'Ambos';
-    }
-  };
+  const expenseCategories = categories.filter(cat => cat.type === 'expense');
+  const incomeCategories = categories.filter(cat => cat.type === 'income');
 
   return (
     <Container maxWidth="md">
@@ -160,42 +177,103 @@ const Categories: React.FC = () => {
           </Button>
         </Box>
 
-        <Paper>
-          <List>
-            {categories.map((category) => (
-              <ListItem key={category.id} divider>
-                <ListItemText
-                  primary={category.name}
-                  secondary={
-                    <Chip
-                      label={getTypeLabel(category.type)}
-                      color={getTypeColor(category.type)}
-                      size="small"
-                      sx={{ mt: 1 }}
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={6}>
+            <Paper>
+              <Typography variant="h6" sx={{ p: 2, bgcolor: 'error.light', color: 'white' }}>
+                Categorías de Gastos
+              </Typography>
+              <List>
+                {expenseCategories.map((category) => (
+                  <ListItem key={category.id} divider>
+                    <ListItemText
+                      primary={category.name}
+                      secondary={
+                        <Box
+                          component="span"
+                          sx={{
+                            width: 16,
+                            height: 16,
+                            borderRadius: '50%',
+                            display: 'inline-block',
+                            bgcolor: category.color || EXPENSE_COLORS[0].value,
+                            mr: 1,
+                            verticalAlign: 'middle'
+                          }}
+                        />
+                      }
                     />
-                  }
-                />
-                <ListItemSecondaryAction>
-                  <IconButton
-                    edge="end"
-                    aria-label="edit"
-                    onClick={() => handleOpenDialog(category)}
-                    sx={{ mr: 1 }}
-                  >
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton
-                    edge="end"
-                    aria-label="delete"
-                    onClick={() => handleDelete(category.id!)}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </ListItemSecondaryAction>
-              </ListItem>
-            ))}
-          </List>
-        </Paper>
+                    <ListItemSecondaryAction>
+                      <IconButton
+                        edge="end"
+                        aria-label="edit"
+                        onClick={() => handleOpenDialog(category)}
+                        sx={{ mr: 1 }}
+                      >
+                        <EditIcon />
+                      </IconButton>
+                      <IconButton
+                        edge="end"
+                        aria-label="delete"
+                        onClick={() => handleDelete(category.id!)}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </ListItemSecondaryAction>
+                  </ListItem>
+                ))}
+              </List>
+            </Paper>
+          </Grid>
+
+          <Grid item xs={12} md={6}>
+            <Paper>
+              <Typography variant="h6" sx={{ p: 2, bgcolor: 'success.light', color: 'white' }}>
+                Categorías de Ingresos
+              </Typography>
+              <List>
+                {incomeCategories.map((category) => (
+                  <ListItem key={category.id} divider>
+                    <ListItemText
+                      primary={category.name}
+                      secondary={
+                        <Box
+                          component="span"
+                          sx={{
+                            width: 16,
+                            height: 16,
+                            borderRadius: '50%',
+                            display: 'inline-block',
+                            bgcolor: category.color || INCOME_COLORS[0].value,
+                            mr: 1,
+                            verticalAlign: 'middle'
+                          }}
+                        />
+                      }
+                    />
+                    <ListItemSecondaryAction>
+                      <IconButton
+                        edge="end"
+                        aria-label="edit"
+                        onClick={() => handleOpenDialog(category)}
+                        sx={{ mr: 1 }}
+                      >
+                        <EditIcon />
+                      </IconButton>
+                      <IconButton
+                        edge="end"
+                        aria-label="delete"
+                        onClick={() => handleDelete(category.id!)}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </ListItemSecondaryAction>
+                  </ListItem>
+                ))}
+              </List>
+            </Paper>
+          </Grid>
+        </Grid>
 
         <Dialog open={openDialog} onClose={handleCloseDialog}>
           <form onSubmit={handleSubmit}>
@@ -213,32 +291,70 @@ const Categories: React.FC = () => {
                   required
                   fullWidth
                 />
-                <FormControl fullWidth required>
-                  <InputLabel>Tipo</InputLabel>
-                  <Select
+
+                <FormControl>
+                  <RadioGroup
+                    row
                     value={formData.type}
-                    label="Tipo"
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        type: e.target.value as 'expense' | 'income' | 'both'
-                      })
-                    }
+                    onChange={(e) => handleTypeChange(e.target.value as 'expense' | 'income')}
                   >
-                    <MenuItem value="expense">Gasto</MenuItem>
-                    <MenuItem value="income">Ingreso</MenuItem>
-                    <MenuItem value="both">Ambos</MenuItem>
+                    <FormControlLabel
+                      value="expense"
+                      control={<Radio />}
+                      label="Gasto"
+                    />
+                    <FormControlLabel
+                      value="income"
+                      control={<Radio />}
+                      label="Ingreso"
+                    />
+                  </RadioGroup>
+                </FormControl>
+
+                <FormControl fullWidth>
+                  <InputLabel>Color</InputLabel>
+                  <Select
+                    value={customColor ? 'custom' : formData.color}
+                    label="Color"
+                    onChange={(e) => {
+                      if (e.target.value === 'custom') {
+                        setCustomColor(true);
+                      } else {
+                        setCustomColor(false);
+                        setFormData({ ...formData, color: e.target.value });
+                      }
+                    }}
+                  >
+                    {(formData.type === 'expense' ? EXPENSE_COLORS : INCOME_COLORS).map((color) => (
+                      <MenuItem key={color.value} value={color.value}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Box
+                            sx={{
+                              width: 20,
+                              height: 20,
+                              borderRadius: '50%',
+                              bgcolor: color.value
+                            }}
+                          />
+                          {color.name}
+                        </Box>
+                      </MenuItem>
+                    ))}
+                    <MenuItem value="custom">Color personalizado</MenuItem>
                   </Select>
                 </FormControl>
-                <TextField
-                  label="Color (opcional)"
-                  value={formData.color || ''}
-                  onChange={(e) =>
-                    setFormData({ ...formData, color: e.target.value })
-                  }
-                  fullWidth
-                  placeholder="#000000"
-                />
+
+                {customColor && (
+                  <TextField
+                    label="Código de color (HEX)"
+                    value={formData.color}
+                    onChange={(e) =>
+                      setFormData({ ...formData, color: e.target.value })
+                    }
+                    placeholder="#000000"
+                    fullWidth
+                  />
+                )}
               </Box>
             </DialogContent>
             <DialogActions>

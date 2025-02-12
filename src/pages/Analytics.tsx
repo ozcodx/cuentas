@@ -26,8 +26,10 @@ import {
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '../services/auth';
 import { getTransactionsByDateRange } from '../services/transactions';
+import { getCategories } from '../services/categories';
 import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
+import type { Category } from '../services/categories';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
@@ -36,6 +38,21 @@ const Analytics: React.FC = () => {
   const [timeRange, setTimeRange] = useState(6); // meses
   const [monthlyData, setMonthlyData] = useState<any[]>([]);
   const [categoryData, setCategoryData] = useState<any[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      if (user) {
+        try {
+          const userCategories = await getCategories(user);
+          setCategories(userCategories);
+        } catch (error) {
+          console.error('Error al cargar categorías:', error);
+        }
+      }
+    };
+    loadCategories();
+  }, [user]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -69,12 +86,13 @@ const Analytics: React.FC = () => {
           // Procesar datos por categoría
           const categoryStats = new Map();
           transactions.forEach(transaction => {
-            if (!categoryStats.has(transaction.category)) {
-              categoryStats.set(transaction.category, 0);
+            const categoryName = categories.find(cat => cat.id === transaction.category)?.name || transaction.category;
+            if (!categoryStats.has(categoryName)) {
+              categoryStats.set(categoryName, 0);
             }
             categoryStats.set(
-              transaction.category,
-              categoryStats.get(transaction.category) + Math.abs(transaction.amount)
+              categoryName,
+              categoryStats.get(categoryName) + Math.abs(transaction.amount)
             );
           });
 
@@ -91,7 +109,14 @@ const Analytics: React.FC = () => {
     };
 
     loadData();
-  }, [user, timeRange]);
+  }, [user, timeRange, categories]);
+
+  const formatAmount = (value: number) => {
+    return new Intl.NumberFormat('es-CL', {
+      style: 'currency',
+      currency: 'CLP'
+    }).format(value);
+  };
 
   return (
     <Container maxWidth="lg">
@@ -107,6 +132,7 @@ const Analytics: React.FC = () => {
             label="Rango de Tiempo"
             onChange={(e) => setTimeRange(Number(e.target.value))}
           >
+            <MenuItem value={1}>Último mes</MenuItem>
             <MenuItem value={3}>Últimos 3 meses</MenuItem>
             <MenuItem value={6}>Últimos 6 meses</MenuItem>
             <MenuItem value={12}>Último año</MenuItem>
@@ -123,8 +149,8 @@ const Analytics: React.FC = () => {
                 <LineChart data={monthlyData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip />
+                  <YAxis tickFormatter={formatAmount} />
+                  <Tooltip formatter={formatAmount} />
                   <Legend />
                   <Line
                     type="monotone"
@@ -159,7 +185,7 @@ const Analytics: React.FC = () => {
                     cx="50%"
                     cy="50%"
                     outerRadius={80}
-                    label
+                    label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
                   >
                     {categoryData.map((entry, index) => (
                       <Cell
@@ -168,8 +194,7 @@ const Analytics: React.FC = () => {
                       />
                     ))}
                   </Pie>
-                  <Tooltip />
-                  <Legend />
+                  <Tooltip formatter={formatAmount} />
                 </PieChart>
               </ResponsiveContainer>
             </Paper>
@@ -182,30 +207,26 @@ const Analytics: React.FC = () => {
               </Typography>
               <Box sx={{ mt: 2 }}>
                 <Typography variant="body1" gutterBottom>
-                  Total Ingresos: $
-                  {monthlyData
-                    .reduce((sum, month) => sum + month.income, 0)
-                    .toFixed(2)}
+                  Total Ingresos: {formatAmount(
+                    monthlyData.reduce((sum, month) => sum + month.income, 0)
+                  )}
                 </Typography>
                 <Typography variant="body1" gutterBottom>
-                  Total Gastos: $
-                  {monthlyData
-                    .reduce((sum, month) => sum + month.expenses, 0)
-                    .toFixed(2)}
+                  Total Gastos: {formatAmount(
+                    monthlyData.reduce((sum, month) => sum + month.expenses, 0)
+                  )}
                 </Typography>
                 <Typography variant="body1" gutterBottom>
-                  Promedio Mensual Ingresos: $
-                  {(
+                  Promedio Mensual Ingresos: {formatAmount(
                     monthlyData.reduce((sum, month) => sum + month.income, 0) /
-                    monthlyData.length
-                  ).toFixed(2)}
+                    monthlyData.length || 1
+                  )}
                 </Typography>
                 <Typography variant="body1">
-                  Promedio Mensual Gastos: $
-                  {(
+                  Promedio Mensual Gastos: {formatAmount(
                     monthlyData.reduce((sum, month) => sum + month.expenses, 0) /
-                    monthlyData.length
-                  ).toFixed(2)}
+                    monthlyData.length || 1
+                  )}
                 </Typography>
               </Box>
             </Paper>
