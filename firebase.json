@@ -1,7 +1,7 @@
 {
   "hosting": {
     "public": "dist",
-    "site": "forjadecodigo-1b72a",
+    "site": "oz-cuentas",
     "ignore": [
       "firebase.json",
       "**/.*",
