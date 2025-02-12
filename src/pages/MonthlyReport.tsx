@@ -142,16 +142,24 @@ const MonthlyReport: React.FC = () => {
         </LocalizationProvider>
 
         <Box sx={{ mb: 4 }}>
-          <Paper sx={{ p: 2, display: 'flex', gap: 2, justifyContent: 'space-around' }}>
+          <Paper 
+            className="summary-card"
+            sx={{ 
+              p: 3,
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+              gap: 3
+            }}
+          >
             <Box>
-              <Typography variant="subtitle2">Ingresos</Typography>
-              <Typography variant="h6" color="success.main">
+              <Typography variant="subtitle2">Ingresos del Mes</Typography>
+              <Typography variant="h6" className="success">
                 {formatAmount(summary.totalIncome)}
               </Typography>
             </Box>
             <Box>
-              <Typography variant="subtitle2">Gastos</Typography>
-              <Typography variant="h6" color="error.main">
+              <Typography variant="subtitle2">Gastos del Mes</Typography>
+              <Typography variant="h6" className="error">
                 {formatAmount(summary.totalExpenses)}
               </Typography>
             </Box>
@@ -159,7 +167,7 @@ const MonthlyReport: React.FC = () => {
               <Typography variant="subtitle2">Balance</Typography>
               <Typography
                 variant="h6"
-                color={summary.balance >= 0 ? 'success.main' : 'error.main'}
+                className={summary.balance >= 0 ? 'success' : 'error'}
               >
                 {formatAmount(summary.balance)}
               </Typography>
@@ -167,7 +175,7 @@ const MonthlyReport: React.FC = () => {
           </Paper>
         </Box>
 
-        <TableContainer component={Paper}>
+        <TableContainer component={Paper} className="paper">
           <Table>
             <TableHead>
               <TableRow>
